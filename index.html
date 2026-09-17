@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASTRX — Creator Command Center</title>
+<style>
+:root{
+  --bg:#090a0b;--panel:#101213;--panel2:#151718;--line:#242729;
+  --text:#f2f3f3;--muted:#858a8d;--accent:#f47b32;--accent2:#ff9a5c;
+  --good:#79d6a0;--warn:#f0bd75;--bad:#ee7777;--radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:13px Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:224px;min-height:100vh;position:sticky;top:0;background:#0b0c0d;border-right:1px solid var(--line);padding:18px 13px}
+.logo{height:42px;display:flex;align-items:center;gap:10px;padding:0 9px 20px;font-weight:900;letter-spacing:.22em;font-size:17px}
+.logo-mark{width:28px;height:28px;border:1px solid #555;border-radius:8px;display:grid;place-items:center;color:var(--accent);font-size:12px;letter-spacing:0}
+.workspace{border:1px solid var(--line);background:var(--panel);border-radius:11px;padding:11px;margin-bottom:18px}
+.workspace span,.nav-label,.muted{color:var(--muted)}
+.workspace span{font-size:10px}.workspace b{display:block;margin-top:3px;font-size:12px}
+.nav-label{font-size:9px;letter-spacing:.18em;text-transform:uppercase;margin:17px 9px 7px}
+.nav button{width:100%;border:0;background:transparent;color:#999;text-align:left;padding:10px 10px;border-radius:9px;display:flex;align-items:center;gap:10px;margin:2px 0}
+.nav button:hover,.nav button.active{background:#17191a;color:#fff}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:#4b4f50}
+.nav button.active .nav-dot{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+.count{margin-left:auto;font-size:10px;color:#777}
+.sidebar-foot{position:absolute;left:13px;right:13px;bottom:14px;border:1px solid var(--line);border-radius:12px;padding:12px;background:linear-gradient(145deg,#17100c,#101213)}
+.sidebar-foot b{color:var(--accent2);font-size:11px}.sidebar-foot div{font-size:10px;color:#777;margin-top:4px}
+.main{flex:1;min-width:0;padding:0 26px 45px}
+.topbar{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.crumb{color:#777}.crumb strong{color:#d5d7d8;font-weight:600}
+.top-actions{display:flex;align-items:center;gap:8px}
+.search{width:205px;border:1px solid var(--line);background:#0d0f10;color:#eee;border-radius:20px;padding:9px 13px;outline:none}
+.btn{border:1px solid var(--line);background:#151718;color:#d8d9da;border-radius:9px;padding:9px 12px}
+.btn:hover{background:#1b1e20}.btn.primary{background:var(--accent);border-color:var(--accent);color:#170b05;font-weight:800}
+.btn.small{padding:6px 9px;font-size:11px}
+.view{display:none}.view.active{display:block}
+h1{font-size:25px;line-height:1.1;margin:0 0 6px;letter-spacing:-.02em}.sub{color:var(--muted);margin-bottom:20px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.card,.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.card{padding:14px}.label{font-size:10px;color:var(--muted)}.value{font-size:24px;font-weight:800;margin-top:7px;letter-spacing:-.02em}
+.pill{display:inline-block;margin-top:7px;padding:3px 7px;border-radius:10px;background:#1b1d1e;color:#9da1a3;font-size:9px}
+.layout{display:grid;grid-template-columns:1.55fr 1fr;gap:12px}.panel{padding:15px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}.panel-head h2{font-size:13px;margin:0}.panel-head span{font-size:10px;color:#6f7477}
+.platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.platform{border:1px solid var(--line);background:#0d0f10;border-radius:11px;padding:13px}
+.platform-top{display:flex;align-items:center;justify-content:space-between;color:#aaa;font-size:11px}
+.platform-num{font-size:25px;font-weight:800;margin:10px 0 3px}.platform-meta{font-size:9px;color:#666}
+.recent{display:grid;gap:8px}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #202324;background:#141617;border-radius:10px;padding:10px}
+.row b{font-size:11px}.row small{display:block;color:#6f7477;margin-top:3px;font-size:9px}
+.status{font-size:9px;border-radius:10px;padding:4px 7px;background:#192b22;color:var(--good);white-space:nowrap}
+.status.pending{background:#2a2118;color:var(--warn)}.status.failed{background:#2c1919;color:var(--bad)}
+.notice{border:1px solid #3a2a20;background:#19110c;color:#caa38b;padding:10px;border-radius:10px;font-size:10px;margin-bottom:12px}
+.upload-grid{display:grid;grid-template-columns:1.25fr .85fr;gap:12px}
+.drop{min-height:235px;border:1px dashed #3b3e40;border-radius:12px;background:#0c0e0f;display:grid;place-items:center;text-align:center}
+.drop .icon{font-size:26px;color:#777;margin-bottom:7px}.drop b{font-size:13px}.drop p{color:#666;font-size:10px;margin:5px 0 12px}
+.field{margin-bottom:11px}.field label{display:block;color:#858a8d;font-size:10px;margin-bottom:5px}
+.field input,.field textarea,.field select{width:100%;background:#0d0f10;border:1px solid var(--line);color:#eee;border-radius:9px;padding:9px;outline:none}
+.field textarea{min-height:90px;resize:vertical}.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.check{border:1px solid var(--line);background:#0d0f10;border-radius:9px;padding:9px;font-size:10px;color:#bbb}.check input{accent-color:var(--accent)}
+.file-list{margin-top:10px;display:grid;gap:6px}.file-item{font-size:10px;padding:8px 9px;border:1px solid var(--line);background:#111314;border-radius:8px;display:flex;justify-content:space-between}.file-item span{color:#777}
+.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse}.table th{font-size:9px;color:#666;text-align:left;padding:9px;border-bottom:1px solid var(--line);white-space:nowrap}.table td{font-size:10px;padding:11px 9px;border-bottom:1px solid #1e2021;white-space:nowrap}.link{color:var(--accent2);text-decoration:none}.actions-cell{display:flex;gap:5px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
+.empty{padding:28px;text-align:center;color:#666;border:1px dashed #303334;border-radius:10px}
+.submission-grid{display:grid;grid-template-columns:1.6fr .8fr;gap:12px}.checklist{display:grid;gap:7px}.checkrow{display:flex;gap:8px;align-items:center;padding:9px;border:1px solid var(--line);background:#0e1011;border-radius:9px;font-size:10px}.checkrow i{width:6px;height:6px;background:var(--good);border-radius:50%}
+@media(max-width:1050px){.cards,.kpis{grid-template-columns:repeat(2,1fr)}.layout,.upload-grid,.submission-grid{grid-template-columns:1fr}}
+@media(max-width:720px){.sidebar{display:none}.main{padding:0 14px 35px}.search{width:130px}.platform-grid{grid-template-columns:1fr}.topbar{margin-bottom:20px}.checks{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo"><div class="logo-mark">A</div>ASTRX</div>
+  <div class="workspace"><span>Workspace</span><b>Creator Operations</b></div>
+
+  <div class="nav-label">Main</div>
+  <nav class="nav">
+    <button class="active" data-v="dashboard"><i class="nav-dot"></i>Dashboard</button>
+    <button data-v="upload"><i class="nav-dot"></i>Upload & Cross-post</button>
+    <button data-v="queue"><i class="nav-dot"></i>Queue</button>
+    <button data-v="videos"><i class="nav-dot"></i>Videos & Links</button>
+    <button data-v="campaigns"><i class="nav-dot"></i>Campaigns</button>
+    <button data-v="submissions"><i class="nav-dot"></i>Submissions</button>
+    <button data-v="analytics"><i class="nav-dot"></i>Analytics</button>
+  </nav>
+
+  <div class="nav-label">Accounts</div>
+  <nav class="nav">
+    <button><i class="nav-dot"></i>YouTube <span class="count">6</span></button>
+    <button><i class="nav-dot"></i>TikTok <span class="count">3</span></button>
+    <button><i class="nav-dot"></i>Instagram <span class="count">2</span></button>
+  </nav>
+
+  <div class="sidebar-foot"><b>ASTRX PRO</b><div>Bulk workflows · campaigns · analytics</div></div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb">ASTRX / <strong id="crumb">Dashboard</strong></div>
+    <div class="top-actions">
+      <input class="search" placeholder="Search videos, campaigns...">
+      <button class="btn">Settings</button>
+      <button class="btn primary" onclick="go('upload')">+ Upload</button>
+    </div>
+  </div>
+
+  <section id="dashboard" class="view active">
+    <h1>Creator Command Center</h1>
+    <div class="sub">Publish once, track every destination, then submit campaigns from one place.</div>
+
+    <div class="cards">
+      <div class="card"><div class="label">Connected accounts</div><div class="value">11</div><span class="pill">6 YT · 3 TT · 2 IG</span></div>
+      <div class="card"><div class="label">Videos posted</div><div class="value">186</div><span class="pill">Across all platforms</span></div>
+      <div class="card"><div class="label">Ready to submit</div><div class="value" id="readyCount">4</div><span class="pill">Manual submit</span></div>
+      <div class="card"><div class="label">Total views</div><div class="value">284.6K</div><span class="pill">Last 30 days</span></div>
+    </div>
+
+    <div class="layout">
+      <div class="panel">
+        <div class="panel-head"><h2>Posts by platform</h2><span>Current workspace</span></div>
+        <div class="platform-grid">
+          <div class="platform"><div class="platform-top"><span>YouTube</span><span>6 accounts</span></div><div class="platform-num">76</div><div class="platform-meta">videos posted</div></div>
+          <div class="platform"><div class="platform-top"><span>TikTok</span><span>3 accounts</span></div><div class="platform-num">62</div><div class="platform-meta">videos posted</div></div>
+          <div class="platform"><div class="platform-top"><span>Instagram</span><span>2 accounts</span></div><div class="platform-num">48</div><div class="platform-meta">videos posted</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>Recent activity</h2><span>Latest</span></div>
+        <div class="recent">
+          <div class="row"><div><b>Mindset Clip 042</b><small>YT · TT · IG</small></div><span class="status">Published</span></div>
+          <div class="row"><div><b>Business Clip 019</b><small>YT · TT</small></div><span class="status">Published</span></div>
+          <div class="row"><div><b>Podcast Clip 008</b><small>YT · IG</small></div><span class="status pending">Processing</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="upload" class="view">
+    <h1>Upload & Cross-post</h1><div class="sub">Bulk upload a master video and create destination records.</div>
+    <div class="notice">Prototype workflow: real publishing requires each platform's official OAuth/API integration and secure server-side credentials.</div>
+    <div class="upload-grid">
+      <div class="panel">
+        <div class="drop">
+          <div>
+            <div class="icon">↑</div><b>Drop videos here</b><p>Bulk upload supported</p>
+            <button class="btn" onclick="fileInput.click()">Choose files</button>
+            <input id="fileInput" type="file" accept="video/*" multiple hidden>
+          </div>
+        </div>
+        <div id="fileList" class="file-list"><div class="muted" style="font-size:10px;margin-top:8px">No files selected.</div></div>
+      </div>
+      <div class="panel">
+        <div class="field"><label>Master title</label><input id="title" placeholder="Platform-neutral title"></div>
+        <div class="field"><label>Master description</label><textarea placeholder="Base description..."></textarea></div>
+        <div class="field"><label>Destinations</label><div class="checks">
+          <label class="check"><input type="checkbox" checked> YouTube</label>
+          <label class="check"><input type="checkbox" checked> TikTok</label>
+          <label class="check"><input type="checkbox" checked> Instagram</label>
+        </div></div>
+        <div class="field"><label>Accounts</label><select><option>All selected accounts</option><option>YouTube — Deenforge</option><option>YouTube — Deenvest</option><option>TikTok — @deenops</option><option>Instagram — @astrx.media</option></select></div>
+        <button class="btn primary" style="width:100%" onclick="addQueue()">Add to queue</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="queue" class="view">
+    <h1>Queue</h1><div class="sub">Every destination has an individual status and retry action.</div>
+    <div class="panel table-wrap"><table class="table"><thead><tr><th>VIDEO</th><th>DESTINATIONS</th><th>STATUS</th><th>ACTION</th></tr></thead>
+    <tbody id="queueBody">
+      <tr><td><b>Mindset Clip 042</b><br><small class="muted">VID-1042</small></td><td>YT ×2 · TT ×1 · IG ×1</td><td><span class="status">Complete</span></td><td><button class="btn small" onclick="go('videos')">View links</button></td></tr>
+      <tr><td><b>Podcast Clip 008</b><br><small class="muted">VID-1038</small></td><td>YT ×1 · TT ×1 · IG ×1</td><td><span class="status failed">1 failed</span></td><td><button class="btn small" onclick="this.textContent='Retrying…';setTimeout(()=>this.textContent='Retried',700)">Retry</button></td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section id="videos" class="view">
+    <h1>Videos & Links</h1><div class="sub">One master video ID, with a separate record and link for every destination.</div>
+    <div class="panel table-wrap"><table class="table"><thead><tr><th>MASTER</th><th>PLATFORM</th><th>ACCOUNT</th><th>STATUS</th><th>LINK</th></tr></thead><tbody>
+      <tr><td><b>Mindset Clip 042</b><br><small class="muted">VID-1042</small></td><td>YouTube</td><td>Deenforge</td><td><span class="status">Published</span></td><td><a class="link" href="https://youtube.com" target="_blank">Open ↗</a></td></tr>
+      <tr><td><b>Mindset Clip 042</b><br><small class="muted">VID-1042</small></td><td>TikTok</td><td>@deenops</td><td><span class="status">Published</span></td><td><a class="link" href="https://www.tiktok.com" target="_blank">Open ↗</a></td></tr>
+      <tr><td><b>Mindset Clip 042</b><br><small class="muted">VID-1042</small></td><td>Instagram</td><td>@astrx.media</td><td><span class="status">Published</span></td><td><a class="link" href="https://www.instagram.com" target="_blank">Open ↗</a></td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section id="campaigns" class="view">
+    <h1>Campaigns</h1><div class="sub">Group videos, destinations and submissions into repeatable campaigns.</div>
+    <div class="kpis">
+      <div class="card"><div class="label">Active campaigns</div><div class="value">3</div></div>
+      <div class="card"><div class="label">Videos</div><div class="value">64</div></div>
+      <div class="card"><div class="label">Destination posts</div><div class="value">186</div></div>
+      <div class="card"><div class="label">Completion</div><div class="value">92%</div></div>
+    </div>
+    <div class="panel"><div class="panel-head"><h2>Campaigns</h2><button class="btn primary small">+ New campaign</button></div>
+      <div class="recent">
+        <div class="row"><div><b>Islamic Entrepreneurship</b><small>24 videos · 5 YT · 3 TT · 2 IG</small></div><span class="status">Active</span></div>
+        <div class="row"><div><b>Mindset Clips</b><small>30 videos · multi-platform</small></div><span class="status">Active</span></div>
+        <div class="row"><div><b>Podcast Archive</b><small>10 videos · 48 destination posts</small></div><span class="status pending">Draft</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="submissions" class="view">
+    <h1>Submissions</h1><div class="sub">Match each published post to a campaign, verify the checklist, then submit.</div>
+    <div class="notice">ASTRX keeps the submission step explicit. The current Content Rewards creator flow requires submitting the posted URL, and its connected social accounts are read-only; no public submission API is documented in its current terms.</div>
+    <div class="submission-grid">
+      <div class="panel table-wrap"><table class="table"><thead><tr><th>CAMPAIGN</th><th>VIDEO</th><th>PLATFORM</th><th>URL</th><th>STATUS</th><th></th></tr></thead>
+      <tbody id="submissionBody">
+        <tr><td>Mindset Campaign</td><td>VID-1042</td><td>YouTube</td><td><a class="link" href="https://youtube.com" target="_blank">Open ↗</a></td><td><span class="status pending">Ready</span></td><td><button class="btn small" onclick="submitRow(this)">Submit</button></td></tr>
+        <tr><td>Mindset Campaign</td><td>VID-1042</td><td>TikTok</td><td><a class="link" href="https://www.tiktok.com" target="_blank">Open ↗</a></td><td><span class="status pending">Ready</span></td><td><button class="btn small" onclick="submitRow(this)">Submit</button></td></tr>
+        <tr><td>Deen Business</td><td>VID-1038</td><td>Instagram</td><td><a class="link" href="https://www.instagram.com" target="_blank">Open ↗</a></td><td><span class="status">Submitted</span></td><td><button class="btn small" disabled>Done</button></td></tr>
+      </tbody></table></div>
+      <div class="panel">
+        <div class="panel-head"><h2>Pre-submit checklist</h2></div>
+        <div class="checklist">
+          <div class="checkrow"><i></i> Correct campaign selected</div>
+          <div class="checkrow"><i></i> Correct platform</div>
+          <div class="checkrow"><i></i> Published post is public</div>
+          <div class="checkrow"><i></i> Required tags/disclosure added</div>
+          <div class="checkrow"><i></i> Original/allowed content</div>
+          <div class="checkrow"><i></i> Published URL is attached</div>
+        </div>
+        <button class="btn primary" style="width:100%;margin-top:12px" onclick="alert('Submission prepared. Connect an approved submission API when one is available; otherwise submit through the campaign platform.')">Submit selected</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="analytics" class="view">
+    <h1>Analytics</h1><div class="sub">Cross-platform performance from your connected accounts.</div>
+    <div class="kpis">
+      <div class="card"><div class="label">Views</div><div class="value">284.6K</div><span class="pill">Last 30 days</span></div>
+      <div class="card"><div class="label">Engagements</div><div class="value">18.4K</div></div>
+      <div class="card"><div class="label">Posts</div><div class="value">186</div></div>
+      <div class="card"><div class="label">Avg views/post</div><div class="value">1.53K</div></div>
+    </div>
+    <div class="panel table-wrap"><table class="table"><thead><tr><th>PLATFORM</th><th>POSTS</th><th>VIEWS</th><th>ENGAGEMENT</th></tr></thead>
+      <tbody><tr><td>YouTube</td><td>76</td><td>141.2K</td><td>8.9K</td></tr><tr><td>TikTok</td><td>62</td><td>92.4K</td><td>6.1K</td></tr><tr><td>Instagram</td><td>48</td><td>51.0K</td><td>3.4K</td></tr></tbody>
+    </table></div>
+  </section>
+</main>
+</div>
+
+<script>
+const names={dashboard:'Dashboard',upload:'Upload & Cross-post',queue:'Queue',videos:'Videos & Links',campaigns:'Campaigns',submissions:'Submissions',analytics:'Analytics'};
+function go(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('active',b.dataset.v===id));
+  document.getElementById('crumb').textContent=names[id];
+}
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>go(b.dataset.v));
+
+const fileInput=document.getElementById('fileInput');
+const fileList=document.getElementById('fileList');
+fileInput.onchange=()=>{
+  if(!fileInput.files.length){fileList.innerHTML='<div class="muted" style="font-size:10px">No files selected.</div>';return}
+  fileList.innerHTML=[...fileInput.files].map(f=>`<div class="file-item"><b>${escapeHtml(f.name)}</b><span>${formatBytes(f.size)}</span></div>`).join('');
+};
+function formatBytes(n){if(n<1024*1024)return Math.round(n/1024)+' KB';return (n/1024/1024).toFixed(1)+' MB'}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+function addQueue(){
+  const title=(document.getElementById('title').value||'Untitled video').trim();
+  const id='VID-'+Math.floor(1000+Math.random()*8999);
+  document.getElementById('queueBody').insertAdjacentHTML('afterbegin',
+    `<tr><td><b>${escapeHtml(title)}</b><br><small class="muted">${id}</small></td><td>YT · TT · IG</td><td><span class="status pending">Queued</span></td><td><button class="btn small" onclick="go('videos')">Track links</button></td></tr>`);
+  go('queue');
+}
+function submitRow(btn){
+  const row=btn.closest('tr');
+  row.querySelector('.status').className='status';
+  row.querySelector('.status').textContent='Submitted';
+  btn.textContent='Done'; btn.disabled=true;
+  const ready=document.getElementById('readyCount');
+  ready.textContent=Math.max(0,parseInt(ready.textContent)-1);
+}
+</script>
+</body>
+</html>
